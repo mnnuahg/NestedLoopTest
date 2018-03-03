@@ -22,7 +22,7 @@ int main() {
         
         printf(" Task F%d\n", i);
     } LOOP_END;
-    printf("Test G\n");
+    printf("Task G\n");
 
     return 0;
 }
