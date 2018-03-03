@@ -101,7 +101,9 @@ int main(int argc, char* argv[]) {
     int seed = atoi(argv[2]);
     genTest(Array, ArraySize, seed);
 
+    // This random seed determines how the execution order of QuickSort is randomized 
     srand(time(0));
+    
     QuickSort(0, ArraySize);
 
     printf("Result:   [");
