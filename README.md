@@ -9,7 +9,7 @@ This project contains two macros LOOP_BEGIN and LOOP_END,
 which can be used to enclose loops in C++ code, 
 and the iterations of the enclosed loops will be executed in random order.
 The loops can also be nested. 
-Nested iterations will be executed in random order
+Nested loop iterations will be executed in random order
 while respecting the fork-join dependencies.
 The execution is still sequential, just the execution order is randomized.
 
