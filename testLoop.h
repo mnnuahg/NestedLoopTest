@@ -116,8 +116,8 @@ public:
     }
     bool hasNext() {
         /* We can leave the loop only after all iterations are executed (not just enqueued!).
-           iterStart < iterEnd means some iterations are neither enqueued or executed.
-           TQ.numDequeues()<goalNumDequeues means some iterations are still in the queue. */
+           iterStart<iterEnd means some iterations (of this loop) are neither enqueued or executed.
+           TQ.numDequeues()<goalNumDequeues means some iterations (of this loop) are still in the queue. */
         return iterStart<iterEnd || TQ.numDequeues()<goalNumDequeues;
     }
     Action nextAction() {
