@@ -56,6 +56,13 @@ public:
 
 TaskQueue TQ(1000000);
 
+/* When we dequeue and execute a task, 
+   the task may dequeue and execute another task. 
+   Since execute the tasks is essentially making function calls,
+   a series of dequeue will cause deep function calls which may overflow the stack.
+   so we have _taskDepth to track the current call depth and _maxTaskDepth 
+   to prevent the call depth to exceed certain threshold.
+   Actually we don't need the two variables if your call stack is large enough. */
 int _taskDepth = 0;
 const int _maxTaskDepth = 10000;
 
@@ -83,6 +90,8 @@ public:
         return iterStart<iterEnd;
     }
     Action nextAction() {
+        /* When we encounters an iteration, we just execute them.
+           This is naturally the sequential execution order, which is depth-first */
         return Execute;
     }
     int nextIterIdx() {
@@ -106,11 +115,25 @@ public:
         goalNumDequeues = 0;
     }
     bool hasNext() {
+        /* We can leave the loop only after all iterations are executed (not just enqueued!).
+           iterStart < iterEnd means some iterations are neither enqueued or executed.
+           TQ.numDequeues()<goalNumDequeues means some iterations are still in the queue. */
         return iterStart<iterEnd || TQ.numDequeues()<goalNumDequeues;
     }
     Action nextAction() {
+        /* BFPolicy is just enqueue all the iterations first, 
+           then dequeue them until all the enqueued iterations are dequeued and executed.
+           Execute the dequeued iterations may cause more iterations (inside further nested loops) are enqueued,
+           however, these iterations won't be executed until all previously enqueued iterations are dequeued since the queue is FIFO. 
+           This achieves breadth-first execution order. */
         if(iterStart < iterEnd) {
             if(_taskDepth<_maxTaskDepth && TQ.size()<TQ.capacity()) {
+                /* If a task (iteration) is enqueued, then we should make sure that it is dequeued
+                   before leaving the loop. 
+                   Since the queue is FIFO, we can not dequeue the iteration enqueued here
+                   until we have dequeued all iterations that are already in the queue.
+                   Therefore, we set goalNumDequeues as follows so that the loop will be leaved
+                   only after at least TQ.size()+1 more dequeues are made. */
                 goalNumDequeues = TQ.numDequeues()+TQ.size()+1;
                 return Enqueue;
             }
@@ -219,7 +242,7 @@ public:
 void enqueueAndExec(function<void(int)> loopBody, int iterStart, int iterEnd) {
     int oldTaskDepth = _taskDepth;
     /* We can also use BFExecPolicy or DFExecPolicy here */
-    for(RandomExecPolicy ep(iterStart, iterEnd); ep.hasNext(); ep.proceed()) {
+    for(BFExecPolicy ep(iterStart, iterEnd); ep.hasNext(); ep.proceed()) {
         switch(ep.nextAction()) {
             case Enqueue: {
                 TQ.enqueue(Iter(loopBody, ep.nextIterIdx()));
